@@ -21,6 +21,9 @@ export function SiteLayout() {
             <NavLink className={navLinkClassName} to="/help">
               Help
             </NavLink>
+            <NavLink className={navLinkClassName} to="/compare">
+              Compare
+            </NavLink>
           </nav>
         </div>
       </header>

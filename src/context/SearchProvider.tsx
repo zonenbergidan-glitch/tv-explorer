@@ -14,6 +14,7 @@ interface SearchState {
   status: SearchStatus
   errorMessage: string
   hasSearched: boolean
+  comparedShowIds: number[]
 }
 
 type SearchAction =
@@ -21,6 +22,7 @@ type SearchAction =
   | { type: 'search-started'; query: string; requestId: number }
   | { type: 'search-succeeded'; results: TvmazeSearchResult[]; requestId: number }
   | { type: 'search-failed'; errorMessage: string; requestId: number }
+  | { type: 'comparison-toggled'; showId: number }
 
 const initialState: SearchState = {
   query: '',
@@ -31,6 +33,7 @@ const initialState: SearchState = {
   status: 'idle',
   errorMessage: '',
   hasSearched: false,
+  comparedShowIds: [],
 }
 
 function searchReducer(state: SearchState, action: SearchAction): SearchState {
@@ -47,6 +50,7 @@ function searchReducer(state: SearchState, action: SearchAction): SearchState {
         status: action.query ? 'loading' : 'idle',
         errorMessage: '',
         hasSearched: Boolean(action.query),
+        comparedShowIds: [],
       }
     case 'search-succeeded':
       if (action.requestId !== state.requestId) {
@@ -68,6 +72,29 @@ function searchReducer(state: SearchState, action: SearchAction): SearchState {
         errorMessage: action.errorMessage,
         status: 'error',
       }
+    case 'comparison-toggled': {
+      if (!state.results.some(({ show }) => show.id === action.showId)) {
+        return state
+      }
+
+      if (state.comparedShowIds.includes(action.showId)) {
+        return {
+          ...state,
+          comparedShowIds: state.comparedShowIds.filter(
+            (showId) => showId !== action.showId,
+          ),
+        }
+      }
+
+      if (state.comparedShowIds.length >= 2) {
+        return state
+      }
+
+      return {
+        ...state,
+        comparedShowIds: [...state.comparedShowIds, action.showId],
+      }
+    }
   }
 }
 
@@ -119,9 +146,12 @@ export function SearchProvider({ children }: PropsWithChildren) {
     status: state.status,
     errorMessage: state.errorMessage,
     hasSearched: state.hasSearched,
+    comparedShowIds: state.comparedShowIds,
     setQuery: (query) => dispatch({ type: 'query-changed', query }),
     submitSearch: () => startSearch(state.query),
     retrySearch: () => startSearch(state.lastSearchQuery),
+    toggleComparedShow: (showId) =>
+      dispatch({ type: 'comparison-toggled', showId }),
   }
 
   return (

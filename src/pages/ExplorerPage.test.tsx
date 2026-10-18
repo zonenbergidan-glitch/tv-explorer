@@ -97,6 +97,11 @@ describe('ExplorerPage', () => {
     const resultButton = await screen.findByRole('button', { name: /Girls/ })
     await user.click(resultButton)
     expect(resultButton).toHaveAttribute('aria-pressed', 'true')
+    const comparisonCheckbox = screen.getByRole('checkbox', {
+      name: 'Compare Girls in comparison',
+    })
+    await user.click(comparisonCheckbox)
+    expect(comparisonCheckbox).toBeChecked()
 
     await user.click(searchButton)
 
@@ -106,6 +111,47 @@ describe('ExplorerPage', () => {
       'aria-pressed',
       'false',
     )
+    expect(
+      screen.getByRole('checkbox', { name: 'Compare Girls in comparison' }),
+    ).not.toBeChecked()
+  })
+
+  it('limits comparison to two results and allows removing either selection', async () => {
+    const user = userEvent.setup()
+    mockSearchShows.mockResolvedValue([
+      makeResult(1, 'First'),
+      makeResult(2, 'Second'),
+      makeResult(3, 'Third'),
+    ])
+    renderExplorerPage()
+
+    await user.type(screen.getByRole('searchbox', { name: 'Search TV shows' }), 'shows')
+    await user.click(screen.getByRole('button', { name: 'Search' }))
+
+    const first = await screen.findByRole('checkbox', {
+      name: 'Compare First in comparison',
+    })
+    const second = screen.getByRole('checkbox', {
+      name: 'Compare Second in comparison',
+    })
+    const third = screen.getByRole('checkbox', {
+      name: 'Compare Third in comparison',
+    })
+
+    await user.click(first)
+    await user.click(second)
+
+    expect(first).toBeChecked()
+    expect(second).toBeChecked()
+    expect(third).toBeDisabled()
+    expect(screen.getByRole('status')).toHaveTextContent('Two shows are selected')
+
+    await user.click(screen.getByRole('checkbox', { name: 'Remove First from comparison' }))
+
+    expect(
+      screen.getByRole('checkbox', { name: 'Compare First in comparison' }),
+    ).not.toBeChecked()
+    expect(third).toBeEnabled()
   })
 
   it('searches and shows results, then allows keyboard selection and details', async () => {

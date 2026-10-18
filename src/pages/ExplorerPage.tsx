@@ -12,9 +12,11 @@ export function ExplorerPage() {
     results,
     status,
     errorMessage,
+    comparedShowIds,
     setQuery,
     submitSearch,
     retrySearch,
+    toggleComparedShow,
   } = useSearch()
   const [selectedShowId, setSelectedShowId] = useState<number | null>(null)
 
@@ -52,7 +54,9 @@ export function ExplorerPage() {
           status={status}
           results={results}
           selectedShowId={selectedShowId}
+          comparedShowIds={comparedShowIds}
           onSelectShow={setSelectedShowId}
+          onToggleComparedShow={toggleComparedShow}
         />
 
         <section className="show-detail-panel" aria-live="polite">

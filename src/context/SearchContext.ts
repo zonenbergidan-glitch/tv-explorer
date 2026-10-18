@@ -10,9 +10,11 @@ export interface SearchContextValue {
   status: SearchStatus
   errorMessage: string
   hasSearched: boolean
+  comparedShowIds: number[]
   setQuery: (query: string) => void
   submitSearch: () => void
   retrySearch: () => void
+  toggleComparedShow: (showId: number) => void
 }
 
 export const SearchContext = createContext<SearchContextValue | null>(null)
