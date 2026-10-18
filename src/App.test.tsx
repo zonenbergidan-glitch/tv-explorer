@@ -1,8 +1,21 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
-import { describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { searchShows } from './api/tvmaze'
+import type { TvmazeSearchResult } from './api/tvmaze'
 import App from './App'
+
+vi.mock('./api/tvmaze', async (importOriginal) => ({
+  ...await importOriginal<typeof import('./api/tvmaze')>(),
+  searchShows: vi.fn(),
+}))
+
+const mockSearchShows = vi.mocked(searchShows)
+
+beforeEach(() => {
+  mockSearchShows.mockReset()
+})
 
 describe('app navigation', () => {
   it('moves between pages through links and keeps the shared menu available', async () => {
@@ -77,5 +90,35 @@ describe('app navigation', () => {
     expect(screen.getByText(/press Enter or Space to select a show/)).toBeVisible()
     expect(screen.getByText(/choose Try again to repeat it/)).toBeVisible()
     expect(screen.getByText(/Not available, No image, or No summary available/)).toBeVisible()
+  })
+
+  it('keeps the query and results when navigating to About and back without another request', async () => {
+    const user = userEvent.setup()
+    const results: TvmazeSearchResult[] = [
+      { score: 1, show: { id: 139, name: 'Girls' } },
+    ]
+    mockSearchShows.mockResolvedValue(results)
+
+    render(
+      <MemoryRouter initialEntries={['/']}>
+        <App />
+      </MemoryRouter>,
+    )
+
+    const searchInput = screen.getByRole('searchbox', { name: 'Search TV shows' })
+    await user.type(searchInput, 'girls')
+    expect(mockSearchShows).not.toHaveBeenCalled()
+    await user.click(screen.getByRole('button', { name: 'Search' }))
+    expect(await screen.findByRole('button', { name: /Girls/ })).toBeVisible()
+    expect(mockSearchShows).toHaveBeenCalledTimes(1)
+
+    await user.click(screen.getByRole('link', { name: 'About' }))
+    await user.click(screen.getByRole('link', { name: 'Explorer' }))
+
+    expect(screen.getByRole('searchbox', { name: 'Search TV shows' })).toHaveValue(
+      'girls',
+    )
+    expect(screen.getByRole('button', { name: /Girls/ })).toBeVisible()
+    expect(mockSearchShows).toHaveBeenCalledTimes(1)
   })
 })

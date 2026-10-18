@@ -1,58 +1,27 @@
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import type { FormEvent } from 'react'
-import { searchShows } from '../api/tvmaze'
-import type { TvmazeSearchResult } from '../api/tvmaze'
-import { SearchFeedback, type SearchStatus } from '../components/SearchFeedback'
+import { useSearch } from '../context/SearchContext'
+import { SearchFeedback } from '../components/SearchFeedback'
 import { SearchForm } from '../components/SearchForm'
 import { SearchResults } from '../components/SearchResults'
 import { ShowDetails } from '../components/ShowDetails'
 
 export function ExplorerPage() {
-  const [query, setQuery] = useState('')
-  const [lastSearchQuery, setLastSearchQuery] = useState('')
-  const [status, setStatus] = useState<SearchStatus>('idle')
-  const [results, setResults] = useState<TvmazeSearchResult[]>([])
+  const {
+    query,
+    results,
+    status,
+    errorMessage,
+    setQuery,
+    submitSearch,
+    retrySearch,
+  } = useSearch()
   const [selectedShowId, setSelectedShowId] = useState<number | null>(null)
-  const [errorMessage, setErrorMessage] = useState('')
-  const requestId = useRef(0)
-
-  async function runSearch(searchQuery: string) {
-    const normalizedQuery = searchQuery.trim()
-    const currentRequestId = ++requestId.current
-
-    setLastSearchQuery(normalizedQuery)
-    setSelectedShowId(null)
-    setResults([])
-    setErrorMessage('')
-
-    if (!normalizedQuery) {
-      setStatus('idle')
-      return
-    }
-
-    setStatus('loading')
-
-    try {
-      const searchResults = await searchShows(normalizedQuery)
-      if (currentRequestId !== requestId.current) {
-        return
-      }
-
-      setResults(searchResults)
-      setStatus('success')
-    } catch {
-      if (currentRequestId !== requestId.current) {
-        return
-      }
-
-      setErrorMessage('The search could not be completed. Please try again.')
-      setStatus('error')
-    }
-  }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    void runSearch(query)
+    setSelectedShowId(null)
+    submitSearch()
   }
 
   const selectedShow = results.find(({ show }) => show.id === selectedShowId)?.show
@@ -72,7 +41,10 @@ export function ExplorerPage() {
         status={status}
         resultCount={results.length}
         errorMessage={errorMessage}
-        onRetry={() => void runSearch(lastSearchQuery)}
+        onRetry={() => {
+          setSelectedShowId(null)
+          retrySearch()
+        }}
       />
 
       <div className="explorer-layout">

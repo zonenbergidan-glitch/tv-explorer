@@ -1,6 +1,6 @@
 import type { TvmazeSearchResult } from '../api/tvmaze'
 import { Link } from 'react-router-dom'
-import type { SearchStatus } from './SearchFeedback'
+import type { SearchStatus } from '../context/SearchContext'
 
 interface SearchResultsProps {
   status: SearchStatus

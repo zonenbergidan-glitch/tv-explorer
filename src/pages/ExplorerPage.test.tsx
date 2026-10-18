@@ -4,6 +4,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { searchShows } from '../api/tvmaze'
 import type { TvmazeSearchResult } from '../api/tvmaze'
+import { SearchProvider } from '../context/SearchProvider'
 import { ExplorerPage } from './ExplorerPage'
 
 vi.mock('../api/tvmaze', () => ({
@@ -15,7 +16,9 @@ const mockSearchShows = vi.mocked(searchShows)
 function renderExplorerPage() {
   return render(
     <MemoryRouter>
-      <ExplorerPage />
+      <SearchProvider>
+        <ExplorerPage />
+      </SearchProvider>
     </MemoryRouter>,
   )
 }
@@ -55,13 +58,54 @@ afterEach(() => {
 })
 
 describe('ExplorerPage', () => {
-  it('shows the labeled search form and the initial guidance', () => {
+  it('shows the labeled search form and the initial guidance', async () => {
+    const user = userEvent.setup()
     renderExplorerPage()
 
     expect(screen.getByRole('searchbox', { name: 'Search TV shows' })).toBeVisible()
     expect(screen.getByRole('button', { name: 'Search' })).toBeVisible()
     expect(screen.getByText('Search for a show to see matching results.')).toBeVisible()
     expect(mockSearchShows).not.toHaveBeenCalled()
+
+    await user.type(
+      screen.getByRole('searchbox', { name: 'Search TV shows' }),
+      'typing does not search',
+    )
+    expect(mockSearchShows).not.toHaveBeenCalled()
+  })
+
+  it('does not call the API when an empty query is submitted', async () => {
+    const user = userEvent.setup()
+    renderExplorerPage()
+
+    await user.click(screen.getByRole('button', { name: 'Search' }))
+
+    expect(mockSearchShows).not.toHaveBeenCalled()
+    expect(screen.getByText('Search for a show to see matching results.')).toBeVisible()
+  })
+
+  it('repeats the same query and clears the local selection for the new request', async () => {
+    const user = userEvent.setup()
+    const results = [makeResult(139, 'Girls')]
+    mockSearchShows.mockResolvedValueOnce(results).mockResolvedValueOnce(results)
+    renderExplorerPage()
+
+    const input = screen.getByRole('searchbox', { name: 'Search TV shows' })
+    const searchButton = screen.getByRole('button', { name: 'Search' })
+    await user.type(input, 'girls')
+    await user.click(searchButton)
+    const resultButton = await screen.findByRole('button', { name: /Girls/ })
+    await user.click(resultButton)
+    expect(resultButton).toHaveAttribute('aria-pressed', 'true')
+
+    await user.click(searchButton)
+
+    await waitFor(() => expect(mockSearchShows).toHaveBeenCalledTimes(2))
+    expect(mockSearchShows).toHaveBeenLastCalledWith('girls')
+    expect(await screen.findByRole('button', { name: /Girls/ })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    )
   })
 
   it('searches and shows results, then allows keyboard selection and details', async () => {

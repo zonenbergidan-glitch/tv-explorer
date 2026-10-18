@@ -6,18 +6,21 @@ import { ExplorerPage } from './pages/ExplorerPage'
 import { HelpPage } from './pages/HelpPage'
 import { NotFoundPage } from './pages/NotFoundPage'
 import { ShowPage } from './pages/ShowPage'
+import { SearchProvider } from './context/SearchProvider'
 
 function App() {
   return (
-    <Routes>
-      <Route element={<SiteLayout />}>
-        <Route index element={<ExplorerPage />} />
-        <Route path="shows/:showId" element={<ShowPage />} />
-        <Route path="about" element={<AboutPage />} />
-        <Route path="help" element={<HelpPage />} />
-        <Route path="*" element={<NotFoundPage />} />
-      </Route>
-    </Routes>
+    <SearchProvider>
+      <Routes>
+        <Route element={<SiteLayout />}>
+          <Route index element={<ExplorerPage />} />
+          <Route path="shows/:showId" element={<ShowPage />} />
+          <Route path="about" element={<AboutPage />} />
+          <Route path="help" element={<HelpPage />} />
+          <Route path="*" element={<NotFoundPage />} />
+        </Route>
+      </Routes>
+    </SearchProvider>
   )
 }
 

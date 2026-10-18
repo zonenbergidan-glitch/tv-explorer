@@ -1,4 +1,4 @@
-export type SearchStatus = 'idle' | 'loading' | 'success' | 'error'
+import type { SearchStatus } from '../context/SearchContext'
 
 interface SearchFeedbackProps {
   status: SearchStatus
