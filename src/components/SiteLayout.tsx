@@ -27,6 +27,12 @@ export function SiteLayout() {
       <main className="site-main">
         <Outlet />
       </main>
+      <footer className="site-footer" aria-label="Data source and license">
+        <p>
+          Show data from <a href="https://www.tvmaze.com/">TVmaze</a>, under
+          the <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0 license</a>.
+        </p>
+      </footer>
     </div>
   )
 }

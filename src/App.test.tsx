@@ -41,4 +41,41 @@ describe('app navigation', () => {
       '/',
     )
   })
+
+  it('explains the project and links to its data source and license', () => {
+    render(
+      <MemoryRouter initialEntries={['/about']}>
+        <App />
+      </MemoryRouter>,
+    )
+
+    expect(screen.getByRole('heading', { name: 'About' })).toBeVisible()
+    expect(screen.getByText(/React, TypeScript, and Vite/)).toBeVisible()
+    expect(screen.getByRole('link', { name: 'TVmaze public API' })).toHaveAttribute(
+      'href',
+      'https://www.tvmaze.com/api',
+    )
+    expect(screen.getByRole('link', { name: 'TVmaze' })).toHaveAttribute(
+      'href',
+      'https://www.tvmaze.com/',
+    )
+    expect(screen.getByRole('link', { name: 'CC BY-SA 4.0 license' })).toHaveAttribute(
+      'href',
+      'https://creativecommons.org/licenses/by-sa/4.0/',
+    )
+  })
+
+  it('documents the implemented search, keyboard, retry, and missing-data behavior', () => {
+    render(
+      <MemoryRouter initialEntries={['/help']}>
+        <App />
+      </MemoryRouter>,
+    )
+
+    expect(screen.getByRole('heading', { name: 'Help' })).toBeVisible()
+    expect(screen.getByText(/Enter a show name in the search field/)).toBeVisible()
+    expect(screen.getByText(/press Enter or Space to select a show/)).toBeVisible()
+    expect(screen.getByText(/choose Try again to repeat it/)).toBeVisible()
+    expect(screen.getByText(/Not available, No image, or No summary available/)).toBeVisible()
+  })
 })

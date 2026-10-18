@@ -4,8 +4,15 @@ export function AboutPage() {
       <p className="page-eyebrow">About this project</p>
       <h1 id="about-title">About</h1>
       <p>
-        TV Explorer is a small project for finding television shows and learning
-        more about them.
+        TV Explorer helps you find television shows and explore details about a
+        show you select.
+      </p>
+      <h2>Built with</h2>
+      <p>React, TypeScript, and Vite.</p>
+      <h2>Data source</h2>
+      <p>
+        Show information comes from the{' '}
+        <a href="https://www.tvmaze.com/api">TVmaze public API</a>.
       </p>
     </section>
   )
