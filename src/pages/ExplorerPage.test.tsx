@@ -1,5 +1,6 @@
 import { act, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { searchShows } from '../api/tvmaze'
 import type { TvmazeSearchResult } from '../api/tvmaze'
@@ -10,6 +11,14 @@ vi.mock('../api/tvmaze', () => ({
 }))
 
 const mockSearchShows = vi.mocked(searchShows)
+
+function renderExplorerPage() {
+  return render(
+    <MemoryRouter>
+      <ExplorerPage />
+    </MemoryRouter>,
+  )
+}
 
 function makeResult(
   id: number,
@@ -47,7 +56,7 @@ afterEach(() => {
 
 describe('ExplorerPage', () => {
   it('shows the labeled search form and the initial guidance', () => {
-    render(<ExplorerPage />)
+    renderExplorerPage()
 
     expect(screen.getByRole('searchbox', { name: 'Search TV shows' })).toBeVisible()
     expect(screen.getByRole('button', { name: 'Search' })).toBeVisible()
@@ -66,13 +75,17 @@ describe('ExplorerPage', () => {
         summary: '<p><strong>Girls</strong> &amp friends.</p>',
       }),
     ])
-    render(<ExplorerPage />)
+    renderExplorerPage()
 
     await user.type(screen.getByRole('searchbox', { name: 'Search TV shows' }), 'girls')
     await user.click(screen.getByRole('button', { name: 'Search' }))
 
     expect(mockSearchShows).toHaveBeenCalledWith('girls')
     const showButton = await screen.findByRole('button', { name: /Girls/ })
+    expect(screen.getByRole('link', { name: 'Full details' })).toHaveAttribute(
+      'href',
+      '/shows/139',
+    )
     showButton.focus()
     await user.keyboard('{Enter}')
 
@@ -102,7 +115,7 @@ describe('ExplorerPage', () => {
         summary: null,
       }),
     ])
-    render(<ExplorerPage />)
+    renderExplorerPage()
 
     await user.type(screen.getByRole('searchbox', { name: 'Search TV shows' }), 'unknown')
     await user.click(screen.getByRole('button', { name: 'Search' }))
@@ -117,7 +130,7 @@ describe('ExplorerPage', () => {
     const user = userEvent.setup()
     const pendingSearch = deferred<TvmazeSearchResult[]>()
     mockSearchShows.mockReturnValue(pendingSearch.promise)
-    render(<ExplorerPage />)
+    renderExplorerPage()
 
     await user.type(screen.getByRole('searchbox', { name: 'Search TV shows' }), 'none')
     await user.click(screen.getByRole('button', { name: 'Search' }))
@@ -133,7 +146,7 @@ describe('ExplorerPage', () => {
     mockSearchShows
       .mockRejectedValueOnce(new Error('network error'))
       .mockResolvedValueOnce([makeResult(2, 'Retry result')])
-    render(<ExplorerPage />)
+    renderExplorerPage()
 
     await user.type(screen.getByRole('searchbox', { name: 'Search TV shows' }), 'retry me')
     await user.click(screen.getByRole('button', { name: 'Search' }))
@@ -152,7 +165,7 @@ describe('ExplorerPage', () => {
     mockSearchShows
       .mockReturnValueOnce(olderSearch.promise)
       .mockReturnValueOnce(newerSearch.promise)
-    render(<ExplorerPage />)
+    renderExplorerPage()
 
     const searchInput = screen.getByRole('searchbox', { name: 'Search TV shows' })
     const submitButton = screen.getByRole('button', { name: 'Search' })

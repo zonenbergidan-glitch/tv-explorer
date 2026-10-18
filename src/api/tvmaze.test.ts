@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { searchShows } from './tvmaze'
+import { getShowById, searchShows } from './tvmaze'
 
 afterEach(() => {
   vi.unstubAllGlobals()
@@ -98,5 +98,31 @@ describe('searchShows', () => {
     vi.stubGlobal('fetch', fetchMock)
 
     await expect(searchShows('Girls')).rejects.toThrow('Failed to fetch')
+  })
+})
+
+describe('getShowById', () => {
+  it('loads a show by its ID', async () => {
+    const show = { id: 139, name: 'Girls' }
+    const fetchMock = stubFetchResponse(show)
+
+    await expect(getShowById(139)).resolves.toEqual(show)
+    expect(fetchMock).toHaveBeenCalledWith('https://api.tvmaze.com/shows/139')
+  })
+
+  it('does not fetch for an invalid ID', async () => {
+    const fetchMock = vi.fn()
+    vi.stubGlobal('fetch', fetchMock)
+
+    await expect(getShowById(0)).rejects.toThrow(RangeError)
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it('preserves an HTTP 404 status for a missing show', async () => {
+    stubFetchResponse({ message: 'Not Found' }, 404)
+
+    await expect(getShowById(999999)).rejects.toMatchObject({
+      status: 404,
+    })
   })
 })

@@ -1,4 +1,5 @@
 import type { TvmazeSearchResult } from '../api/tvmaze'
+import { Link } from 'react-router-dom'
 import type { SearchStatus } from './SearchFeedback'
 
 interface SearchResultsProps {
@@ -26,17 +27,25 @@ export function SearchResults({
         <ul className="show-results__list">
           {results.map(({ show }) => (
             <li key={show.id}>
-              <button
-                className="show-results__button"
-                type="button"
-                aria-pressed={selectedShowId === show.id}
-                onClick={() => onSelectShow(show.id)}
-              >
-                <span>{show.name}</span>
-                <span className="show-results__meta">
-                  {show.language ?? 'TV show'}
-                </span>
-              </button>
+              <div className="show-results__item">
+                <button
+                  className="show-results__button"
+                  type="button"
+                  aria-pressed={selectedShowId === show.id}
+                  onClick={() => onSelectShow(show.id)}
+                >
+                  <span>{show.name}</span>
+                  <span className="show-results__meta">
+                    {show.language ?? 'TV show'}
+                  </span>
+                </button>
+                <Link
+                  className="show-results__details-link"
+                  to={`/shows/${show.id}`}
+                >
+                  Full details
+                </Link>
+              </div>
             </li>
           ))}
         </ul>

@@ -48,7 +48,7 @@
 - [x] להריץ בדיקות, lint ו-build ולתעד רק תוצאות שהתקבלו בפועל.
 - [x] לעדכן README עם הוראות הרצה ובדיקות אמיתיות.
 - [x] לבדוק PROMPTS.md והיסטוריית commits; לתאר פערים בכנות, בלי לשחזר רשומות.
-- [ ] המשתמש מבצע commit אחרון ו-push ובודק את הקבצים ב-GitHub.
+- [x] המשתמש מבצע commit אחרון ו-push ובודק את הקבצים ב-GitHub.
 הצעת commit: `docs: finalize project instructions`.
 
 ## 6. חילוץ רכיבי Explorer מטופסים — השלמה חדשה
