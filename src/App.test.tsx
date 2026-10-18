@@ -253,4 +253,127 @@ describe('app navigation', () => {
 
     expect(screen.getByText(/At least two different shows are needed/)).toBeVisible()
   })
+
+  it('shows an empty prompt on Stats before a search', () => {
+    render(
+      <MemoryRouter initialEntries={['/stats']}>
+        <App />
+      </MemoryRouter>,
+    )
+
+    expect(screen.getByRole('heading', { name: 'Statistics' })).toBeVisible()
+    expect(screen.getByText(/Search for shows in Explorer/)).toBeVisible()
+    expect(screen.getByRole('link', { name: 'Go to Explorer' })).toHaveAttribute(
+      'href',
+      '/',
+    )
+    expect(mockSearchShows).not.toHaveBeenCalled()
+  })
+
+  it('shows loading, error and empty-result states on Stats', async () => {
+    const user = userEvent.setup()
+    mockSearchShows
+      .mockResolvedValueOnce([])
+      .mockRejectedValueOnce(new Error('Search failed'))
+
+    render(
+      <MemoryRouter initialEntries={['/']}>
+        <App />
+      </MemoryRouter>,
+    )
+
+    const searchInput = screen.getByRole('searchbox', { name: 'Search TV shows' })
+    await user.type(searchInput, 'empty')
+    await user.click(screen.getByRole('button', { name: 'Search' }))
+    await user.click(screen.getByRole('link', { name: 'Stats' }))
+    expect(await screen.findByText('The last search returned no shows.')).toBeVisible()
+
+    await user.click(screen.getByRole('link', { name: 'Explorer' }))
+    const failureInput = screen.getByRole('searchbox', { name: 'Search TV shows' })
+    await user.clear(failureInput)
+    await user.type(failureInput, 'failure')
+    await user.click(screen.getByRole('button', { name: 'Search' }))
+    await screen.findByRole('alert')
+    await user.click(screen.getByRole('link', { name: 'Stats' }))
+    expect(screen.getByRole('alert')).toHaveTextContent('The search could not be completed')
+
+    await user.click(screen.getByRole('link', { name: 'Explorer' }))
+    const pendingInput = screen.getByRole('searchbox', { name: 'Search TV shows' })
+    await user.clear(pendingInput)
+    await user.type(pendingInput, 'pending')
+    mockSearchShows.mockReturnValueOnce(new Promise(() => {}))
+    await user.click(screen.getByRole('button', { name: 'Search' }))
+    await user.click(screen.getByRole('link', { name: 'Stats' }))
+    expect(screen.getByRole('status')).toHaveTextContent('Search is in progress')
+  })
+
+  it('updates statistics from the latest search without another request on navigation', async () => {
+    const user = userEvent.setup()
+    mockSearchShows
+      .mockResolvedValueOnce([
+        {
+          score: 1,
+          show: {
+            id: 1,
+            name: 'Zero rating',
+            language: 'English',
+            genres: ['Drama', 'Comedy'],
+            rating: { average: 0 },
+          },
+        },
+        {
+          score: 1,
+          show: {
+            id: 2,
+            name: 'No rating',
+            language: null,
+            genres: null,
+            rating: { average: null },
+          },
+        },
+      ])
+      .mockResolvedValueOnce([
+        {
+          score: 1,
+          show: {
+            id: 3,
+            name: 'New search result',
+            language: 'French',
+            genres: ['Comedy'],
+            rating: { average: 6 },
+          },
+        },
+      ])
+
+    render(
+      <MemoryRouter initialEntries={['/']}>
+        <App />
+      </MemoryRouter>,
+    )
+
+    const input = screen.getByRole('searchbox', { name: 'Search TV shows' })
+    await user.type(input, 'first query')
+    await user.click(screen.getByRole('button', { name: 'Search' }))
+    await screen.findByRole('button', { name: /Zero rating/ })
+    await user.click(screen.getByRole('link', { name: 'Stats' }))
+
+    expect(screen.getByText('first query')).toBeVisible()
+    expect(screen.getByText('0.0')).toBeVisible()
+    expect(screen.getByText('These statistics describe only the current search results, not the full TVmaze catalog.')).toBeVisible()
+    expect(screen.getByText(/genre counts can add up to more than the number of shows/)).toBeVisible()
+    expect(mockSearchShows).toHaveBeenCalledTimes(1)
+
+    await user.click(screen.getByRole('link', { name: 'Explorer' }))
+    const secondSearchInput = screen.getByRole('searchbox', { name: 'Search TV shows' })
+    await user.clear(secondSearchInput)
+    await user.type(secondSearchInput, 'second query')
+    await user.click(screen.getByRole('button', { name: 'Search' }))
+    await screen.findByRole('button', { name: /New search result/ })
+    await user.click(screen.getByRole('link', { name: 'Stats' }))
+
+    expect(screen.getByText('second query')).toBeVisible()
+    expect(screen.getByText('6.0')).toBeVisible()
+    expect(screen.queryByText('0.0')).toBeNull()
+    expect(mockSearchShows).toHaveBeenCalledTimes(2)
+  })
 })

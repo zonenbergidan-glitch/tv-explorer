@@ -8,6 +8,7 @@ import { NotFoundPage } from './pages/NotFoundPage'
 import { ShowPage } from './pages/ShowPage'
 import { SearchProvider } from './context/SearchProvider'
 import { ComparePage } from './pages/ComparePage'
+import { StatsPage } from './pages/StatsPage'
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
           <Route index element={<ExplorerPage />} />
           <Route path="shows/:showId" element={<ShowPage />} />
           <Route path="compare" element={<ComparePage />} />
+          <Route path="stats" element={<StatsPage />} />
           <Route path="about" element={<AboutPage />} />
           <Route path="help" element={<HelpPage />} />
           <Route path="*" element={<NotFoundPage />} />

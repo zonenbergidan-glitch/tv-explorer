@@ -24,6 +24,9 @@ export function SiteLayout() {
             <NavLink className={navLinkClassName} to="/compare">
               Compare
             </NavLink>
+            <NavLink className={navLinkClassName} to="/stats">
+              Stats
+            </NavLink>
           </nav>
         </div>
       </header>
